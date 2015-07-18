@@ -63,7 +63,7 @@ class GtkUI(GtkPluginBase):
     def on_apply_prefs(self):
         log.debug("applying prefs for NoFolder")
         config = {
-            "test":self.glade.get_widget("txt_test").get_text()
+            "enabled": self.glade.get_widget("enabled_checkbutton").get_active()
         }
         client.nofolder.set_config(config)
 
@@ -72,4 +72,4 @@ class GtkUI(GtkPluginBase):
 
     def cb_get_config(self, config):
         "callback for on show_prefs"
-        self.glade.get_widget("txt_test").set_text(config["test"])
+        self.glade.get_widget("enabled_checkbutton").set_active(config["enabled"])
