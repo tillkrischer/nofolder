@@ -46,12 +46,13 @@ import os
 import re
 
 DEFAULT_PREFS = {
-    "enabled": False
+    "dontaddfolder": False,
+    "createfolder": False,
 }
 
 class Core(CorePluginBase):
     def enable(self):
-        self.config = deluge.configmanager.ConfigManager("myplugin.conf", DEFAULT_PREFS)
+        self.config = deluge.configmanager.ConfigManager("nofolder.conf", DEFAULT_PREFS)
         core = component.get("Core")
         self.torrent_manager = component.get("TorrentManager")
         self.torrents = core.torrentmanager.torrents
@@ -64,17 +65,20 @@ class Core(CorePluginBase):
         pass
 
     def post_torrent_add(self, torrent_id):
-        if not self.torrent_manager.session_started or not self.config['enabled']:
+        if not self.torrent_manager.session_started or (not (self.config['dontaddfolder'] or self.config['createfolder'])):
             return
         torrent = self.torrents[torrent_id]
         torrent.pause()
         status_keys = ["files", "save_path", "name"]
         status = torrent.get_status(status_keys)
-        if re.match('.*/.*', status["files"][0]["path"]):
-            newFolder = os.path.basename(status["save_path"]) + "/"
-            newPath = os.path.dirname(status["save_path"])
-            torrent.rename_folder(status["name"] + "/", newFolder)
-            torrent.set_save_path(newPath)
+        if self.config['dontaddfolder'] and re.match('.*/.*', status["files"][0]["path"]):
+            namechanges = []
+            for i in range(0, len(status["files"])):
+                namechanges.append([i, status["files"][i]["path"].replace(status["name"] + "/", "")])
+            torrent.rename_files(namechanges)
+            torrent.force_recheck()
+        if self.config['createfolder'] and not re.match('.*/.*', status["files"][0]["path"]):
+            torrent.rename_files([[0, os.path.splitext(status["name"])[0] + "/" + status["files"][0]["path"]]])
             torrent.force_recheck()
         torrent.resume()
 
