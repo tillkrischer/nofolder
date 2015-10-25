@@ -65,7 +65,8 @@ class Core(CorePluginBase):
         pass
 
     def post_torrent_add(self, torrent_id):
-        if not self.torrent_manager.session_started or (not (self.config['dontaddfolder'] or self.config['createfolder'])):
+        #if not self.torrent_manager.session_started or (not (self.config['dontaddfolder'] or self.config['createfolder'])):
+        if not (self.config['dontaddfolder'] or self.config['createfolder']):
             return
         torrent = self.torrents[torrent_id]
         torrent.pause()
